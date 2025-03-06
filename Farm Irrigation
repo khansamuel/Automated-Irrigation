@@ -1,0 +1,65 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+#include <Stepper.h>  // Include Stepper library
+
+#define SOIL_SENSOR A0   // Soil moisture sensor connected to analog pin A0
+int RED_LED = 7;        // Red LED for dry soil
+int GREEN_LED = 6;      // Green LED for moist soil
+
+// Define stepper motor parameters
+#define STEPS_PER_REV 2048  // Steps per revolution for 28BYJ-48
+Stepper stepper(STEPS_PER_REV, 8, 10, 9, 11); // Motor pins: IN1-IN4
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);  // I2C LCD, Address: 0x27, 16x2 display
+
+void setup() {
+  pinMode(SOIL_SENSOR, INPUT);
+  pinMode(RED_LED, OUTPUT);
+  pinMode(GREEN_LED, OUTPUT);
+
+  stepper.setSpeed(10);  // Set stepper motor speed (RPM)
+
+  lcd.init();         // Initialize the LCD
+  lcd.backlight();    // Turn on the LCD backlight
+  lcd.setCursor(0, 0);
+  lcd.print(" Soil Monitor ");
+  delay(2000);
+  lcd.clear();
+}
+
+void loop() {
+  int sensorValue = analogRead(SOIL_SENSOR);  // Read moisture sensor value
+  float voltage = sensorValue * (5.0 / 1023.0); // Convert to voltage (0-5V)
+
+  lcd.setCursor(0, 0);
+  lcd.print("Moisture: ");
+  lcd.print(voltage);
+  lcd.print("V ");
+
+  if (voltage <= 2.0) {  // Soil is dry
+    digitalWrite(RED_LED, HIGH);
+    digitalWrite(GREEN_LED, LOW);
+    lcd.setCursor(0, 1);
+    lcd.print("Water Pump ON! ");
+
+    stepper.step(512);  // Rotate stepper to simulate pump running
+
+  } else {  // Soil is moist
+    digitalWrite(RED_LED, LOW);
+    digitalWrite(GREEN_LED, HIGH);
+    lcd.setCursor(0, 1);
+    lcd.print("Water Pump OFF! ");
+
+    stepper.step(0);  // Stop the stepper motor
+  }
+
+  delay(2000);  // Wait for 2 seconds before next reading
+}void setup() {
+  // put your setup code here, to run once:
+
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+
+}
